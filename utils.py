@@ -12,7 +12,7 @@ def load_image(filename, size=None, scale=None):
     return img
 
 
-def save_image(filename, data):
+def save_image(data, filename:str='styled_image.jpg'):
     img = data.clone().clamp(0, 255).numpy()
     img = img.transpose(1, 2, 0).astype("uint8")
     img = Image.fromarray(img)

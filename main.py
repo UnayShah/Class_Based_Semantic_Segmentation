@@ -123,6 +123,8 @@ def train(image_size, dataset_path: str, style_image_path: str, checkpoint_model
                     (agg_content_loss + agg_style_loss) / (batch_id + 1)
                 )
                 print(mesg)
+            if not os.path.exists(checkpoint_model_dir):
+                os.mkdir(checkpoint_model_dir)
 
             if checkpoint_model_dir is not None and (batch_id + 1) % epochs//5 == 0:
                 transformer.eval().cpu()
@@ -137,6 +139,9 @@ def train(image_size, dataset_path: str, style_image_path: str, checkpoint_model
     transformer.eval().cpu()
     save_model_filename = "epoch_" + str(epochs) + "_" + str(time.ctime()).replace(' ', '_') + "_" + str(
         content_weight) + "_" + str(style_weight) + ".model"
+    save_model_filename = "trained_model.model"
+    if not os.path.exists(save_model_dir):
+        os.mkdir(save_model_dir)
     save_model_path = os.path.join(save_model_dir, save_model_filename)
     torch.save(transformer.state_dict(), save_model_path)
 
@@ -144,3 +149,28 @@ def train(image_size, dataset_path: str, style_image_path: str, checkpoint_model
 
 
 train([100, 100], dataset_path, style_image_path)
+
+
+def stylize(content_image: str, model: str = './model/trained_model.model'):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    content_image = utils.load_image(content_image)
+    content_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Lambda(lambda x: x.mul(255))
+    ])
+    content_image = content_transform(content_image)
+    content_image = content_image.unsqueeze(0).to(device)
+
+    with torch.no_grad():
+        style_model = TransformerNet()
+        state_dict = torch.load(model)
+        # remove saved deprecated running_* keys in InstanceNorm from the checkpoint
+        for k in list(state_dict.keys()):
+            if re.search(r'in\d+\.running_(mean|var)$', k):
+                del state_dict[k]
+        style_model.load_state_dict(state_dict)
+        style_model.to(device)
+        style_model.eval()
+        output = style_model(content_image).cpu()
+    utils.save_image(output[0])

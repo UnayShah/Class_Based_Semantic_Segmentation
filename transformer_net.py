@@ -24,10 +24,10 @@ class ResidualBlock(Module):
     def __init__(self, in_channels: int, out_channels: int, kernel_size: list[int] = [3, 3], stride: list[int] = [1, 1]) -> None:
         super(ResidualBlock, self).__init__()
         self.layers: list = []
-        self.conv_1 = Conv2d(in_channels, out_channels,
+        self.conv_1 = ConvLayer(in_channels, out_channels,
                              kernel_size[0], stride[0])
         self.instance_norm_1 = InstanceNorm2d(out_channels, affine=True)
-        self.conv_2 = Conv2d(out_channels, out_channels,
+        self.conv_2 = ConvLayer(out_channels, out_channels,
                              kernel_size[1], stride[1])
         self.instance_norm_2 = InstanceNorm2d(out_channels, affine=True)
         self.relu = ReLU(inplace=True)
