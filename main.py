@@ -44,11 +44,11 @@ def get_style_model(style_number: int):
     return transformer
 
 
-print(type(load_image('.\style_images\candy.jpg')))
+print(type(load_image('./style_images/candy.jpg')))
 transformer = TransformerNet().to(torch.device('cuda'))
 transformer.train()
 # dataset_path = f'./VOCtrainval_11-May-2012'
-dataset_path = f'D:/VSCode/Projects/Visual Learning Project/VOCtrainval_11-May-2012/JPEGImages/small'
+dataset_path = f'./Images'
 style_image_path = f'./style_images/candy.jpg'
 
 
