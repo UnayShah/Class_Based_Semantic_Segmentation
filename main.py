@@ -25,7 +25,6 @@ def load_image(filename: str) -> Tensor:
         transforms.Lambda(lambda x: x.mul(255).to(uint8)),
     ])
     transformed_image = image_transforms(image)
-    print(torch.max(transformed_image), torch.min(transformed_image))
     return transformed_image
 
 
@@ -56,7 +55,6 @@ def train(image_size, dataset_path: str, style_image_path: str, checkpoint_model
           save_model_dir: str = './model', content_weight: float = 1e5, style_weight: float = 1e10,
           batch_size: int = 32, lr: float = 0.001, epochs: int = 50, log_interval: int = 10):
     device = 'cuda'
-    print(os.listdir())
     optimizer = Adam(transformer.parameters(), lr)
     mse_loss = torch.nn.MSELoss()
 
