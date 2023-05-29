@@ -53,7 +53,7 @@ style_image_path = f'./style_images/candy.jpg'
 
 def train(image_size, dataset_path: str, style_image_path: str, checkpoint_model_dir: str = './checkpoint',
           save_model_dir: str = './model', content_weight: float = 1e5, style_weight: float = 1e10,
-          batch_size: int = 32, lr: float = 0.001, epochs: int = 50, log_interval: int = 10):
+          batch_size: int = 8, lr: float = 0.001, epochs: int = 50, log_interval: int = 10):
     device = 'cuda'
     optimizer = Adam(transformer.parameters(), lr)
     mse_loss = torch.nn.MSELoss()

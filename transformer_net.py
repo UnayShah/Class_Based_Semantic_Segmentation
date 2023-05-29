@@ -24,15 +24,17 @@ class ResidualBlock(Module):
     def __init__(self, in_channels: int, out_channels: int, kernel_size: list[int] = [3, 3], stride: list[int] = [1, 1]) -> None:
         super(ResidualBlock, self).__init__()
         self.layers: list = []
-        for i in range(2):
-            self.layers.append(Conv2d(
-                in_channels if i == 0 else out_channels, out_channels, kernel_size[i], stride[i]))
-            self.layers.append(InstanceNorm2d(out_channels, affine=True))
+        self.conv_1 = Conv2d(in_channels, out_channels,
+                             kernel_size[0], stride[0])
+        self.instance_norm_1 = InstanceNorm2d(out_channels, affine=True)
+        self.conv_2 = Conv2d(out_channels, out_channels,
+                             kernel_size[1], stride[1])
+        self.instance_norm_2 = InstanceNorm2d(out_channels, affine=True)
         self.relu = ReLU(inplace=True)
 
     def forward(self, x):
-        out = self.relu(self.layers[1](self.layers[0](x)))
-        out = self.layers[3](self.layers[2](x))
+        out = self.relu(self.instance_norm_1(self.conv_1(x)))
+        out = self.instance_norm_2(self.conv_2(out))
         out += x
         # return self.relu(out)
         return out
