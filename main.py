@@ -25,8 +25,8 @@ from train import train_model
 dataset_path = f'./Images'
 style_image_path = f'./style_images/candy.jpg'
 trainNet = train_model(dataset_path)
-trainNet.train([40, 40], dataset_path, style_image_path,
-               epochs=500, log_interval=10, batch_size=4)
+trainNet.train([200, 200], dataset_path, style_image_path,
+               epochs=500, log_interval=10)
 
 
 def stylize(content_image: str, model: str = './model/trained_model.model'):

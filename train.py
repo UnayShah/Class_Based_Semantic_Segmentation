@@ -24,7 +24,7 @@ class train_model():
 
     def train(self, image_size: tuple[int], dataset_path: str, style_image_path: str,
               save_model_path: str = './model', content_weight: float = 1e5,
-              style_weight: float = 1e10, batch_size: int = 32, lr: float = 0.001,
+              style_weight: float = 1e10, batch_size: int = 16, lr: float = 0.001,
               epochs: int = 500, log_interval: int = 10):
         assert image_size, 'Image size cannot be None'
         assert (isinstance(image_size, tuple) or isinstance(image_size, list)) and len(
