@@ -1,52 +1,70 @@
-import glob
-import re
-import time
-import os
-
-from PIL import Image
-import matplotlib.pyplot as plt
-
-# Torch imports
-import torch
-from torch import Tensor, uint8
-from torchvision import transforms, datasets
-from torch.optim import Adam
-from torch.utils.data import DataLoader
-
-from transformer_net import TransformerNet
-from vgg import Vgg16
-import utils
+from stylize import Stylize
 from train import train_model
+import sys
+from os.path import isdir, isfile, join
+from os import listdir
+from PIL import Image
+import cv2
+
+DEFAULT_STYLE_PATH: str = './style_images'
+DEFAULT_TRAIN_PATH: str = './Images'
+DEFAULT_TO_STYLE_PATH: str = './to_style'
 
 
-# transformer = TransformerNet().to(torch.device('cuda'))
-# transformer.train()
-# dataset_path = f'./VOCtrainval_11-May-2012'
-dataset_path = f'./Images'
-style_image_path = f'./style_images/candy.jpg'
-trainNet = train_model(dataset_path)
-trainNet.train([200, 200], dataset_path, style_image_path,
-               epochs=500, log_interval=10)
+if __name__ == '__main__':
+    print(sys.argv)
+    args = sys.argv[1:]
+    style_path: str = DEFAULT_STYLE_PATH
+    dataset_path: str = DEFAULT_TRAIN_PATH
+    to_style_path: str = DEFAULT_TO_STYLE_PATH
+    train: bool = False
+    style: bool = False
 
+    i = 0
+    while i < len(args):
+        if args[i] == '-styles':
+            style_path: str = args[i+1]
+            i += 2
+            continue
+        elif args[i] == '-train':
+            dataset_path: str = args[i+1]
+            i += 2
+            continue
+        elif args[i] == 'train':
+            train = True
+            i += 1
+            continue
+        elif args[i] == 'style':
+            style = True
+            i += 1
+            continue
+        i += 1
 
-def stylize(content_image: str, model: str = './model/trained_model.model'):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if train:
+        assert isdir(style_path) or isfile(
+            style_path), 'Given style path does not exist'
+        assert isdir(dataset_path), 'Given train path does not exist'
 
-    content_image = Image.open(content_image).convert('RGB')
-    content_transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Lambda(lambda x: x.mul(255))
-    ])
-    content_image = content_transform(content_image)
-    content_image = content_image.unsqueeze(0).to(device)
+        style_list: list[str] = []
+        if isdir(style_path):
+            style_list = list(filter(lambda x: str(x).split('.')
+                                     [-1] in ['jpg', 'jpeg', 'png'], listdir(style_path)))
+            style_list = [join(style_path, s) for s in style_list]
+        elif isfile(style_path):
+            style_list.append(style_path)
 
-    with torch.no_grad():
-        style_model = TransformerNet()
-        state_dict = torch.load(model)
-        style_model.load_state_dict(state_dict)
-        style_model.to(device)
-        style_model.eval()
-        output = style_model(content_image).cpu()
-    save_image = Image.fromarray(
-        (output[0].permute((1, 2, 0)*255)).int().detach().cpu().numpy())
-    save_image.save('stylized_image.jpg')
+        trainNet = train_model(dataset_path)
+        for s in style_list:
+            print(s)
+            trainNet.train([20, 20], dataset_path, s,
+                           epochs=10, log_interval=10, batch_size=2)
+    if style:
+        assert isdir(to_style_path), 'Given images path does not exist'
+
+        stylize = Stylize('./model/trained_model.model')
+        content_image = Image.open(
+            './Images/Images/2007_000032.jpg').convert('RGB')
+        # content_image = cv2.imread('./Images/Images/2007_000032.jpg')
+        # content_image = cv2.cvtColor(content_image, cv2.COLOR_BGR2RGB)
+        stylize.stylize_image(content_image)
+    # stylize.stylize_video('./sample_video/sample_video_small.mp4')

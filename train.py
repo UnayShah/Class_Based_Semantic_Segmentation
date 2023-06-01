@@ -19,7 +19,9 @@ import utils
 class train_model():
 
     def __init__(self, dataset_path: str) -> None:
-        self.transformer = TransformerNet().to(torch.device('cuda'))
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+        self.transformer = TransformerNet().to(self.device)
         self.transformer.train()
 
     def train(self, image_size: tuple[int], dataset_path: str, style_image_path: str,
@@ -53,8 +55,6 @@ class train_model():
         # check epochs
         assert isinstance(epochs, int) and epochs > 0
 
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
         optimizer = Adam(self.transformer.parameters(), lr)
         mse_loss = torch.nn.MSELoss()
 
@@ -78,17 +78,17 @@ class train_model():
 
         style = Image.open(style_image_path).convert('RGB')
         style = style_transform(style)
-        style = style.repeat(batch_size, 1, 1, 1).to(device)
+        style = style.repeat(batch_size, 1, 1, 1).to(self.device)
 
         # Load VGG
-        vgg = Vgg16(requires_grad=False).to(device)
+        vgg = Vgg16(requires_grad=False).to(self.device)
         style_features = vgg(utils.normalize_batch(style))
         gram_style = [utils.gram_matrix(y) for y in style_features]
 
         start_time = time.time()
         print('Style image')
         plt.imshow(style[0].permute((1, 2, 0)).detach().cpu().numpy())
-        plt.show()
+        # plt.show()
 
         print('Starting training')
         for e in range(epochs):
@@ -97,7 +97,7 @@ class train_model():
             for x, _ in train_loader:
                 optimizer.zero_grad()
 
-                x = x.to(device)
+                x = x.to(self.device)
                 x = utils.normalize_batch(x)
                 features_x = vgg(x)
 
@@ -132,7 +132,7 @@ class train_model():
                     (1, 2, 0)).int().detach().cpu().numpy()
                 print('Styled image after {} epochs'.format(e))
                 plt.imshow(display_image)
-                plt.show()
+                # plt.show()
 
         # save model
         self.transformer.eval().cpu()
