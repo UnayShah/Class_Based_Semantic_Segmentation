@@ -76,7 +76,7 @@ if __name__ == '__main__':
     if style:
         assert isdir(to_style_path), 'Given images path does not exist'
 
-        stylize = Stylize('./model/trained_model.model')
+        stylize = Stylize(model_path)
         for f in listdir(to_style_path):
             image_path = join(to_style_path, f)
             content_image = Image.open(image_path).convert('RGB')
