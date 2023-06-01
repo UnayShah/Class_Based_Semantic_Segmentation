@@ -11,7 +11,6 @@ DEFAULT_TO_STYLE_PATH: str = './to_style'
 DEFAULT_MODEL_PATH: str = './model/trained_model.model'
 
 if __name__ == '__main__':
-    print(sys.argv)
     args = sys.argv[1:]
     style_path: str = DEFAULT_STYLE_PATH
     dataset_path: str = DEFAULT_TRAIN_PATH
@@ -74,8 +73,8 @@ if __name__ == '__main__':
         for name, s in zip(style_names, style_list):
             print('Using style image: {}'.format(s))
             trainNet = train_model(dataset_path)
-            trainNet.train([100, 100], dataset_path, s, name,
-                           epochs=300, log_interval=10, batch_size=16)
+            trainNet.train([120, 120], dataset_path, s, name,
+                           epochs=500, log_interval=10, batch_size=16)
     if style:
         assert isdir(to_style_path), 'Given images path does not exist'
 
