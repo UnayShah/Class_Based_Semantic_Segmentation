@@ -46,18 +46,25 @@ if __name__ == '__main__':
         assert isdir(dataset_path), 'Given train path does not exist'
 
         style_list: list[str] = []
+        style_names: list[str] = []
+
+        # Read files from style path or populate style list
+        # Style names stores the name of image without rest fo the path and extension
         if isdir(style_path):
-            style_list = list(filter(lambda x: str(x).split('.')
-                                     [-1] in ['jpg', 'jpeg', 'png'], listdir(style_path)))
-            style_list = [join(style_path, s) for s in style_list]
+            style_names = list(filter(lambda x: str(x).split('.')
+                                      [-1] in ['jpg', 'jpeg', 'png'], listdir(style_path)))
+            style_list = [join(style_path, s) for s in style_names]
         elif isfile(style_path):
+            style_names = [style_path.split('/')[-1]]
             style_list.append(style_path)
 
-        trainNet = train_model(dataset_path)
-        for s in style_list:
-            print(s)
-            trainNet.train([20, 20], dataset_path, s,
-                           epochs=10, log_interval=10, batch_size=2)
+        style_names = [name.split('.')[0] for name in style_names]
+
+        for name, s in zip(style_names, style_list):
+            print('Using style image: {}'.format(s))
+            trainNet = train_model(dataset_path)
+            trainNet.train([200, 200], dataset_path, s, name,
+                           epochs=500, log_interval=10, batch_size=16)
     if style:
         assert isdir(to_style_path), 'Given images path does not exist'
 

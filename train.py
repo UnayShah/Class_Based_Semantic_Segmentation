@@ -24,7 +24,7 @@ class train_model():
         self.transformer = TransformerNet().to(self.device)
         self.transformer.train()
 
-    def train(self, image_size: tuple[int], dataset_path: str, style_image_path: str,
+    def train(self, image_size: tuple[int], dataset_path: str, style_image_path: str, style_name: str,
               save_model_path: str = './model', content_weight: float = 1e5,
               style_weight: float = 1e10, batch_size: int = 16, lr: float = 0.001,
               epochs: int = 500, log_interval: int = 10):
@@ -136,7 +136,7 @@ class train_model():
 
         # save model
         self.transformer.eval().cpu()
-        save_model_filename = "trained_model.model"
+        save_model_filename = "{}_trained_model.model".format(style_name)
         if not os.path.exists(save_model_path):
             os.mkdir(save_model_path)
         save_model_path = os.path.join(save_model_path, save_model_filename)
