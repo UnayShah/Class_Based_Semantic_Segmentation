@@ -86,9 +86,9 @@ class train_model():
         gram_style = [utils.gram_matrix(y) for y in style_features]
 
         start_time = time.time()
-        print('Style image')
-        plt.imshow(style[0].permute((1, 2, 0)).detach().cpu().numpy())
-        plt.show(True)
+        # print('Style image')
+        # plt.imshow(style[0].permute((1, 2, 0)).detach().cpu().numpy())
+        # plt.show()
 
         print('Starting training')
         for e in range(epochs):
@@ -130,9 +130,9 @@ class train_model():
                 display_image = (y[0]/torch.max(y[0]))*255
                 display_image = display_image.permute(
                     (1, 2, 0)).int().detach().cpu().numpy()
-                print('Styled image after {} epochs'.format(e))
-                plt.imshow(display_image)
-                plt.show(True)
+                # print('Styled image after {} epochs'.format(e))
+                # plt.imshow(display_image)
+                # plt.show()
 
         # save model
         self.transformer.eval().cpu()
