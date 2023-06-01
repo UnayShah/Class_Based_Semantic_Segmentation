@@ -4,7 +4,6 @@ import sys
 from os.path import isdir, isfile, join, exists
 from os import listdir, mkdir
 from PIL import Image
-import cv2
 
 DEFAULT_STYLE_PATH: str = './style_images'
 DEFAULT_TRAIN_PATH: str = './Images'

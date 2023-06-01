@@ -2,11 +2,9 @@ import time
 import os
 
 from PIL import Image
-import matplotlib.pyplot as plt
 
 # Torch imports
 import torch
-from torch import Tensor, uint8
 from torchvision import transforms, datasets
 from torch.optim import Adam
 from torch.utils.data import DataLoader
