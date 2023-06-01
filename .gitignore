@@ -9,3 +9,5 @@ model
 sample_video
 checkpoint
 styled_image.jpg
+to_style
+styled

@@ -1,15 +1,15 @@
 from stylize import Stylize
 from train import train_model
 import sys
-from os.path import isdir, isfile, join
-from os import listdir
+from os.path import isdir, isfile, join, exists
+from os import listdir, mkdir
 from PIL import Image
 import cv2
 
 DEFAULT_STYLE_PATH: str = './style_images'
 DEFAULT_TRAIN_PATH: str = './Images'
 DEFAULT_TO_STYLE_PATH: str = './to_style'
-
+DEFAULT_MODEL_PATH: str = './model/trained_model.model'
 
 if __name__ == '__main__':
     print(sys.argv)
@@ -17,6 +17,7 @@ if __name__ == '__main__':
     style_path: str = DEFAULT_STYLE_PATH
     dataset_path: str = DEFAULT_TRAIN_PATH
     to_style_path: str = DEFAULT_TO_STYLE_PATH
+    model_path: str = DEFAULT_MODEL_PATH
     train: bool = False
     style: bool = False
 
@@ -38,7 +39,14 @@ if __name__ == '__main__':
             style = True
             i += 1
             continue
-        i += 1
+        elif args[i] == '-model':
+            model_path = args[i+1]
+            i += 2
+            continue
+        else:
+            print(
+                'Received unknown argument \'{}\'. Ignoring...'.format(args[i]))
+            i += 1
 
     if train:
         assert isdir(style_path) or isfile(
@@ -69,9 +77,12 @@ if __name__ == '__main__':
         assert isdir(to_style_path), 'Given images path does not exist'
 
         stylize = Stylize('./model/trained_model.model')
-        content_image = Image.open(
-            './Images/Images/2007_000032.jpg').convert('RGB')
-        # content_image = cv2.imread('./Images/Images/2007_000032.jpg')
-        # content_image = cv2.cvtColor(content_image, cv2.COLOR_BGR2RGB)
-        stylize.stylize_image(content_image)
+        for f in listdir(to_style_path):
+            image_path = join(to_style_path, f)
+            content_image = Image.open(image_path).convert('RGB')
+            processed = stylize.stylize_image(content_image)
+            if not exists('styled'):
+                mkdir('styled')
+            processed.save(join('styled', f))
+
     # stylize.stylize_video('./sample_video/sample_video_small.mp4')

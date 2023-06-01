@@ -14,7 +14,7 @@ from transformer_net import TransformerNet
 class Stylize():
     def __init__(self, model_path: str) -> None:
         assert isinstance(model_path, str), 'Model path must be a string'
-        # assert isfile(model_path), 'Model file does not exist'
+
         self.device = device("cuda" if cuda.is_available() else "cpu")
         self.model_path = model_path
         with no_grad():

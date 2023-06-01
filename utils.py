@@ -1,7 +1,3 @@
-import torch
-from PIL import Image
-
-
 def gram_matrix(y):
     (b, ch, h, w) = y.size()
     features = y.view(b, ch, w * h)
