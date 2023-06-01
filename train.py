@@ -88,7 +88,7 @@ class train_model():
         start_time = time.time()
         print('Style image')
         plt.imshow(style[0].permute((1, 2, 0)).detach().cpu().numpy())
-        # plt.show()
+        plt.show(True)
 
         print('Starting training')
         for e in range(epochs):
@@ -132,7 +132,7 @@ class train_model():
                     (1, 2, 0)).int().detach().cpu().numpy()
                 print('Styled image after {} epochs'.format(e))
                 plt.imshow(display_image)
-                # plt.show()
+                plt.show(True)
 
         # save model
         self.transformer.eval().cpu()
