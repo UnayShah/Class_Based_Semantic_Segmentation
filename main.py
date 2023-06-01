@@ -42,6 +42,10 @@ if __name__ == '__main__':
             model_path = args[i+1]
             i += 2
             continue
+        elif args[i] == '-tostyle':
+            to_style_path = args[i+1]
+            i += 2
+            continue
         else:
             print(
                 'Received unknown argument \'{}\'. Ignoring...'.format(args[i]))
