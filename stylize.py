@@ -31,14 +31,18 @@ class Stylize():
         # Preprocess image
         content_transform = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Lambda(lambda x: x.mul(255))
+            # transforms.Lambda(lambda x: x.mul(255))
         ])
         content_image = content_transform(content_image)
         content_image = content_image.unsqueeze(0).to(self.device)
 
         output = self.style_model(content_image)
-        output -= min(output)
-        output = (output/max(output))*255
+        
+        # output -= min(output)
+        # output = (output/max(output))*255
+        output[0][output[0]<0] = 0
+        output[0][output[0]>255] = 255
+
         save_image = Image.fromarray(output[0].permute(
             (1, 2, 0)).int().cpu().numpy().astype(uint8))
         return save_image
