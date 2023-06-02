@@ -2,12 +2,7 @@ env
 .vscode
 __pycache__
 
-VOCtrainval_11-May-2012*
-VOCtrainval_11-May-2012.tar
-styles/mosaic.pth
-model
 sample_video
-checkpoint
-styled_image.jpg
+model
 to_style
 styled
