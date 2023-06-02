@@ -4,7 +4,7 @@ import sys
 from os.path import isdir, isfile, join, exists
 from os import listdir, mkdir
 from PIL import Image
-import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 DEFAULT_STYLE_PATH: str = './style_images'
 DEFAULT_TRAIN_PATH: str = './Images'
@@ -81,7 +81,7 @@ if __name__ == '__main__':
 
         stylize = Stylize(model_path)
         model_name: str = model_path.split('/')[-1].split('.')[0]
-        for f in listdir(to_style_path):
+        for f in tqdm(listdir(to_style_path)):
             image_path = join(to_style_path, f)
             content_image = Image.open(image_path).convert('RGB')
             processed = stylize.stylize_image(content_image)
