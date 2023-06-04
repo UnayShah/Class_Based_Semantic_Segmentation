@@ -54,7 +54,7 @@ class train_model():
         # check epochs
         assert isinstance(epochs, int) and epochs > 0
 
-        self.transformer.train().gpu()
+        self.transformer.train().to(self.device)
         optimizer = Adam(self.transformer.parameters(), lr)
         mse_loss = torch.nn.MSELoss()
 
