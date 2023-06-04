@@ -75,7 +75,7 @@ if __name__ == '__main__':
             print('Using style image: {}'.format(s))
             trainNet = train_model(dataset_path)
             trainNet.train([200, 200], dataset_path, s, name,
-                           epochs=500, log_interval=10, batch_size=16)
+                           epochs=300, log_interval=10, batch_size=25)
     if style:
         assert isdir(to_style_path), 'Given images path does not exist'
 
