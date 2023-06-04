@@ -2,6 +2,7 @@ import time
 import os
 
 from PIL import Image
+import matplotlib.pyplot as plt
 
 # Torch imports
 import torch
@@ -53,20 +54,19 @@ class train_model():
         # check epochs
         assert isinstance(epochs, int) and epochs > 0
 
+        self.transformer.train().gpu()
         optimizer = Adam(self.transformer.parameters(), lr)
         mse_loss = torch.nn.MSELoss()
 
         # Define transformations
         transform = transforms.Compose([
             transforms.Resize(image_size),
-            transforms.CenterCrop(image_size),
             transforms.ToTensor(),
             transforms.Lambda(lambda x: x.mul(255))
         ])
 
         style_transform = transforms.Compose([
             transforms.Resize(image_size),
-            transforms.CenterCrop(image_size),
             transforms.ToTensor(),
             transforms.Lambda(lambda x: x.mul(255))
         ])
@@ -86,9 +86,9 @@ class train_model():
         gram_style = [utils.gram_matrix(y) for y in style_features]
 
         start_time = time.time()
-        # print('Style image')
-        # plt.imshow(style[0].permute((1, 2, 0)).detach().cpu().numpy())
-        # plt.show()
+        print('Style image')
+        plt.imshow(style[0].permute((1, 2, 0)).detach().cpu().numpy())
+        plt.show()
 
         print('Starting training')
         for e in range(epochs):
@@ -105,8 +105,10 @@ class train_model():
                 y = utils.normalize_batch(y)
                 features_y = vgg(y)
 
+                # content_loss = content_weight * \
+                #     mse_loss(features_y.relu2_2, features_x.relu2_2)
                 content_loss = content_weight * \
-                    mse_loss(features_y.relu2_2, features_x.relu2_2)
+                    mse_loss(features_y.relu3_3, features_x.relu3_3)
 
                 style_loss = 0.
                 for ft_y, gm_s in zip(features_y, gram_style):
@@ -130,9 +132,9 @@ class train_model():
                 display_image = (y[0]/torch.max(y[0]))*255
                 display_image = display_image.permute(
                     (1, 2, 0)).int().detach().cpu().numpy()
-                # print('Styled image after {} epochs'.format(e))
-                # plt.imshow(display_image)
-                # plt.show()
+                print('Styled image after {} epochs'.format(e))
+                plt.imshow(display_image)
+                plt.show()
 
         # save model
         self.transformer.eval().cpu()
