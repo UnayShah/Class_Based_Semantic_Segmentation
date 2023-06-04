@@ -105,10 +105,8 @@ class train_model():
                 y = utils.normalize_batch(y)
                 features_y = vgg(y)
 
-                # content_loss = content_weight * \
-                #     mse_loss(features_y.relu2_2, features_x.relu2_2)
                 content_loss = content_weight * \
-                    mse_loss(features_y.relu3_3, features_x.relu3_3)
+                    mse_loss(features_y.relu2_2, features_x.relu2_2)
 
                 style_loss = 0.
                 for ft_y, gm_s in zip(features_y, gram_style):
