@@ -114,7 +114,8 @@ class train_model():
                     mse_loss(features_y.relu2_2, features_x.relu2_2)
 
                 style_loss = 0.
-                for ft_y, gm_s in zip(features_y, gram_styles[torch.randint(0, len(gram_styles), (1,))[0]]):
+                style_index = torch.randint(0, len(gram_styles), (1,))[0]
+                for ft_y, gm_s in zip(features_y, gram_styles[style_index]):
                     gm_y = utils.gram_matrix(ft_y)
                     style_loss += mse_loss(gm_y, gm_s[:len(x)])
                 style_loss *= style_weight
