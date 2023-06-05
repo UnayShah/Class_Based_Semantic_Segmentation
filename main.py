@@ -19,6 +19,7 @@ if __name__ == '__main__':
     model_path: str = DEFAULT_MODEL_PATH
     train: bool = False
     style: bool = False
+    single_style: bool = False
 
     i = 0
     while i < len(args):
@@ -46,6 +47,9 @@ if __name__ == '__main__':
             to_style_path = args[i+1]
             i += 2
             continue
+        elif args[i] == '-single_style':
+            single_style = True
+            i += 1
         else:
             print(
                 'Received unknown argument \'{}\'. Ignoring...'.format(args[i]))
@@ -55,6 +59,7 @@ if __name__ == '__main__':
         assert isdir(style_path) or isfile(
             style_path), 'Given style path does not exist'
         assert isdir(dataset_path), 'Given train path does not exist'
+        assert isdir(style_path) if single_style else True, 'Train multiple is set but model path is not a directory'
 
         style_list: list[str] = []
         style_names: list[str] = []
@@ -71,11 +76,16 @@ if __name__ == '__main__':
 
         style_names = [name.split('.')[0] for name in style_names]
 
-        for name, s in zip(style_names, style_list):
-            print('Using style image: {}'.format(s))
+        if single_style:
+            style_name = style_path.split('/')[-1]
             trainNet = train_model(dataset_path)
-            trainNet.train([200, 200], dataset_path, s, name,
-                           epochs=300, log_interval=10, batch_size=25)
+            trainNet.train([200, 200], dataset_path, style_list, style_name, epochs=500, log_interval=10, batch_size=1)
+        else:
+            for name, s in zip(style_names, style_list):
+                print('Using style image: {}'.format(s))
+                trainNet = train_model(dataset_path)
+                trainNet.train([200, 200], dataset_path, [s], name,
+                            epochs=300, log_interval=10, batch_size=25)
     if style:
         assert isdir(to_style_path), 'Given images path does not exist'
 

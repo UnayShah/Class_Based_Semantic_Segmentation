@@ -23,7 +23,7 @@ class train_model():
         self.transformer = TransformerNet().to(self.device)
         self.transformer.train()
 
-    def train(self, image_size: tuple[int], dataset_path: str, style_image_path: str, style_name: str,
+    def train(self, image_size: tuple[int], dataset_path: str, style_image_path: list[str], style_name: str,
               save_model_path: str = './model', content_weight: float = 1e5,
               style_weight: float = 1e10, batch_size: int = 16, lr: float = 0.001,
               epochs: int = 500, log_interval: int = 10):
@@ -38,6 +38,7 @@ class train_model():
         no_directories: bool = True
         for f in os.listdir(dataset_path):
             if os.path.isdir(f):
+                print(f)
                 no_directories = False
                 break
         assert not no_directories, 'Dataset must contain directories'
@@ -76,18 +77,22 @@ class train_model():
         train_loader = DataLoader(
             train_dataset, batch_size=batch_size, shuffle=True)
 
-        style = Image.open(style_image_path).convert('RGB')
-        style = style_transform(style)
-        style = style.repeat(batch_size, 1, 1, 1).to(self.device)
+        styles = [Image.open(image_path).convert('RGB')
+                  for image_path in style_image_path]
+        styles = [style_transform(style) for style in styles]
+        styles = [style.repeat(batch_size, 1, 1, 1).to(self.device)
+                  for style in styles]
 
         # Load VGG
         vgg = Vgg16(requires_grad=False).to(self.device)
-        style_features = vgg(utils.normalize_batch(style))
-        gram_style = [utils.gram_matrix(y) for y in style_features]
+        styles_features = [vgg(utils.normalize_batch(style))
+                           for style in styles]
+        gram_styles = [[utils.gram_matrix(
+            y) for y in style_features] for style_features in styles_features]
 
         start_time = time.time()
         print('Style image')
-        plt.imshow(style[0].permute((1, 2, 0)).detach().cpu().numpy())
+        plt.imshow(styles[0][0].permute((1, 2, 0)).detach().cpu().numpy())
         plt.show()
 
         print('Starting training')
@@ -109,7 +114,7 @@ class train_model():
                     mse_loss(features_y.relu2_2, features_x.relu2_2)
 
                 style_loss = 0.
-                for ft_y, gm_s in zip(features_y, gram_style):
+                for ft_y, gm_s in zip(features_y, gram_styles[torch.randint(0, len(gram_styles), (1,))[0]]):
                     gm_y = utils.gram_matrix(ft_y)
                     style_loss += mse_loss(gm_y, gm_s[:len(x)])
                 style_loss *= style_weight
