@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader
 from transformer_net import TransformerNet
 from vgg import Vgg16
 import utils
+from tqdm import tqdm
 
 
 class train_model():
@@ -96,7 +97,7 @@ class train_model():
         plt.show()
 
         print('Starting training')
-        for e in range(epochs):
+        for e in tqdm(range(epochs)):
             agg_content_loss: float = 0.
             agg_style_loss: float = 0.
             for x, _ in train_loader:
