@@ -138,7 +138,7 @@ class train_model():
                 display_image = display_image.permute(
                     (1, 2, 0)).int().detach().cpu().numpy()
                 print('Original image')
-                plt.imshow(x)
+                plt.imshow(x[0].permute((1, 2, 0)).cpu().numpy())
                 plt.show()
                 print('Styled image after {} epochs'.format(e))
                 plt.imshow(display_image)
