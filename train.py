@@ -137,6 +137,9 @@ class train_model():
                 display_image = (y[0]/torch.max(y[0]))*255
                 display_image = display_image.permute(
                     (1, 2, 0)).int().detach().cpu().numpy()
+                print('Original image')
+                plt.imshow(x)
+                plt.show()
                 print('Styled image after {} epochs'.format(e))
                 plt.imshow(display_image)
                 plt.show()

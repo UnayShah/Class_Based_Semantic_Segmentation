@@ -57,6 +57,7 @@ class UpsampleConv(Module):
 class TransformerNet(Module):
     def __init__(self) -> None:
         super(TransformerNet, self).__init__()
+        print('Using BatchNorm instead of InstanceNorm')
         # Convolutional layers
         self.conv_1 = ConvLayer(3, 32, 9, 1)
         self.instance_norm_1 = BatchNorm2d(32, affine=True)
