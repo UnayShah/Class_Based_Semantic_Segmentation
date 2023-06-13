@@ -6,3 +6,12 @@ test_results
 weights
 *__pycache__*
 test_result
+env
+.vscode
+__pycache__
+
+sample_video
+model
+to_style
+styled
+Project_Segmentation.ipynb
