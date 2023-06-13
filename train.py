@@ -42,6 +42,7 @@ def parse_args(model, dataset, base_size, crop_size, train_split):
     print(args)
     return args
 
+
 datasets = {
     'citys': CitySegmentation,
 }
@@ -50,6 +51,7 @@ datasets = {
 def get_segmentation_dataset(name, **kwargs):
     """Segmentation Datasets"""
     return datasets[name.lower()](**kwargs)
+
 
 class Trainer(object):
     def __init__(self, args):
@@ -60,21 +62,27 @@ class Trainer(object):
             transforms.Normalize([.485, .456, .406], [.229, .224, .225]),
         ])
         # dataset and dataloader
-        data_kwargs = {'transform': input_transform, 'base_size': args['base_size'], 'crop_size': args['crop_size']}
-        train_dataset = get_segmentation_dataset(args['dataset'], split=args['train_split'], mode='train', **data_kwargs)
-        val_dataset = get_segmentation_dataset(args['dataset'], split='val', mode='val', **data_kwargs)
+        data_kwargs = {'transform': input_transform,
+                       'base_size': args['base_size'], 'crop_size': args['crop_size']}
+        train_dataset = get_segmentation_dataset(
+            args['dataset'], split=args['train_split'], mode='train', **data_kwargs)
+        val_dataset = get_segmentation_dataset(
+            args['dataset'], split='val', mode='val', **data_kwargs)
         self.train_loader = data.DataLoader(dataset=train_dataset,
                                             batch_size=args['batch_size'],
                                             shuffle=True,
                                             drop_last=True)
+        self.train_size = min(100, self.train_loader.__len__())
         self.val_loader = data.DataLoader(dataset=val_dataset,
                                           batch_size=1,
                                           shuffle=False)
-
+        self.val_size = min(100, self.val_loader.__len__())
+        
         # create network
         self.model = get_fast_scnn(dataset=args['dataset'], aux=args['aux'])
         if torch.cuda.device_count() > 1:
-            self.model = torch.nn.DataParallel(self.model, device_ids=[0, 1, 2])
+            self.model = torch.nn.DataParallel(
+                self.model, device_ids=[0, 1, 2])
         self.model.to(args['device'])
 
         # resume checkpoint if needed
@@ -82,8 +90,10 @@ class Trainer(object):
             if os.path.isfile(args['resume']):
                 name, ext = os.path.splitext(args['resume'])
                 assert ext == '.pkl' or '.pth', 'Sorry only .pth and .pkl files supported.'
-                print('Resuming training, loading {}...'.format(args['resume']))
-                self.model.load_state_dict(torch.load(args['resume'], map_location=lambda storage, loc: storage))
+                print('Resuming training, loading {}...'.format(
+                    args['resume']))
+                self.model.load_state_dict(torch.load(
+                    args['resume'], map_location=lambda storage, loc: storage))
 
         # create criterion
         self.criterion = MixSoftmaxCrossEntropyOHEMLoss(aux=args['aux'], aux_weight=args['aux_weight'],
@@ -128,8 +138,11 @@ class Trainer(object):
                 cur_iters += 1
                 if cur_iters % 10 == 0:
                     print('Epoch: [%2d/%2d] Iter [%4d/%4d] || Time: %4.4f sec || lr: %.8f || Loss: %.4f' % (
-                        epoch, self.args['epochs'], i + 1, len(self.train_loader),
+                        epoch, self.args['epochs'], i +
+                        1, len(self.train_loader),
                         time.time() - start_time, cur_lr, loss.item()))
+                if i==self.train_size:
+                    break
 
             if self.args['no_val']:
                 # save every epoch
@@ -170,7 +183,8 @@ def save_checkpoint(model, args, is_best=False):
     save_path = os.path.join(directory, filename)
     torch.save(model.state_dict(), save_path)
     if is_best:
-        best_filename = '{}_{}_best_model.pth'.format(args['model'], args['dataset'])
+        best_filename = '{}_{}_best_model.pth'.format(
+            args['model'], args['dataset'])
         best_filename = os.path.join(directory, best_filename)
         shutil.copyfile(filename, best_filename)
 
@@ -203,5 +217,6 @@ if args['eval']:
     print('Evaluation model: ', args['resume'])
     trainer.validation(args['start_epoch'])
 else:
-    print('Starting Epoch: %d, Total Epochs: %d' % (args['start_epoch'], args['epochs']))
+    print('Starting Epoch: %d, Total Epochs: %d' %
+          (args['start_epoch'], args['epochs']))
     trainer.train()
