@@ -25,9 +25,9 @@ def parse_args(model, dataset, base_size, crop_size, train_split):
         'train_split': train_split,
         'aux': False,
         'aux_weight': 0.4,
-        'epochs': 160,
+        'epochs': 100,
         'start_epoch': 0,
-        'batch_size': 2,
+        'batch_size': 50,
         'lr': 1e-2,
         'momentum': 0.9,
         'weight_decay': 1e-4,
@@ -77,7 +77,7 @@ class Trainer(object):
                                           batch_size=1,
                                           shuffle=False)
         self.val_size = min(100, self.val_loader.__len__())
-        
+
         # create network
         self.model = get_fast_scnn(dataset=args['dataset'], aux=args['aux'])
         if torch.cuda.device_count() > 1:
@@ -141,7 +141,7 @@ class Trainer(object):
                         epoch, self.args['epochs'], i +
                         1, len(self.train_loader),
                         time.time() - start_time, cur_lr, loss.item()))
-                if i==self.train_size:
+                if i >= 4:
                     break
 
             if self.args['no_val']:
@@ -187,36 +187,3 @@ def save_checkpoint(model, args, is_best=False):
             args['model'], args['dataset'])
         best_filename = os.path.join(directory, best_filename)
         shutil.copyfile(filename, best_filename)
-
-
-# Provide the arguments when calling parse_args function
-args = {
-    'model': 'fast_scnn',
-    'dataset': 'citys',
-    'base_size': 1024,
-    'crop_size': 768,
-    'train_split': 'train',
-    'aux': False,
-    'aux_weight': 0.4,
-    'epochs': 160,
-    'start_epoch': 0,
-    'batch_size': 2,
-    'lr': 1e-2,
-    'momentum': 0.9,
-    'weight_decay': 1e-4,
-    'resume': None,
-    'save_folder': './weights',
-    'eval': False,
-    'no_val': True,
-    'device': 'cuda'  # or 'cpu' if you want to use CPU
-
-}
-
-trainer = Trainer(args)
-if args['eval']:
-    print('Evaluation model: ', args['resume'])
-    trainer.validation(args['start_epoch'])
-else:
-    print('Starting Epoch: %d, Total Epochs: %d' %
-          (args['start_epoch'], args['epochs']))
-    trainer.train()
