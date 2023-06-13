@@ -36,9 +36,10 @@ class train_model():
 
         # check dataset path
         assert isinstance(dataset_path, str) and os.path.isdir(dataset_path)
+        print('directories', os.listdir(dataset_path))
         no_directories: bool = True
         for f in os.listdir(dataset_path):
-            if os.path.isdir(f):
+            if os.path.isdir(os.path.join(dataset_path, f)):
                 print(f)
                 no_directories = False
                 break
