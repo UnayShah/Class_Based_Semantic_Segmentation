@@ -1,4 +1,4 @@
-from cityscape_dataloader import CitySegmentation
+from .cityscape_dataloader import CitySegmentation
 import os
 from torch import nn
 import torch.nn.functional as F
