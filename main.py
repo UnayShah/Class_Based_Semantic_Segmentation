@@ -1,6 +1,7 @@
 import sys
 from PIL import Image
 import matplotlib.pyplot as plt
+import numpy as np
 
 from segment import SegmentData
 from style_transfer.stylize import Stylize
@@ -20,8 +21,8 @@ if __name__ == "__main__":
     masks, labels = segment_image.segment_image(image_path)
     
     stylize = Stylize('./style_transfer/models/udnie_trained_model.model')
-    image = Image.open(image_path).convert('RGB')
-    stylized_image = stylize.stylize_image(image)
+    image = np.asarray(Image.open(image_path).convert('RGB'))
+    stylized_image = np.asarray(stylize.stylize_image(image))
     image[masks[:, :, 0] == 1] = stylized_image[masks[:, :, 0] == 1]
     plt.imshow(image)
     plt.show()
