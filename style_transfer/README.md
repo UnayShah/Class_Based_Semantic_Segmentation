@@ -9,3 +9,7 @@ The fast style transfer code can be trained on custom styles and datasets with a
 >python main.py style -model _path\_to\_model_ -tostyle _path\_to\_images_
 
 >python main.py -image_path ./datasets/citys/leftImg8bit/train/bremen/bremen_000001_000019_leftImg8bit.png
+
+>python main.py -image_path "datasets/citys/leftImg8bit/test/berlin/berlin_000000_000019_leftImg8bit.png"
+
+>%run main.py -image_path "datasets/citys/leftImg8bit/test/berlin/berlin_000000_000019_leftImg8bit.png"
