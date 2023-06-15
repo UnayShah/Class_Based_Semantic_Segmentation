@@ -6,26 +6,63 @@ import torch
 
 
 """Basic building blocks for other models"""
-__all__ = ['FastSCNN', 'get_fast_scnn']
+
+
+class ConvBNReLU(nn.Module):
+    """Conv-BN-ReLU"""
+
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=0, **kwargs):
+        super(ConvBNReLU, self).__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels,
+                              kernel_size, stride, padding, bias=False)
+        self.bn = nn.BatchNorm2d(out_channels)
+        self.relu = nn.ReLU(True)
+
+    def forward(self, x):
+        return self.relu(self.bn(self.conv(x)))
+
+
+class DepthSepConv(nn.Module):
+    """Depthwise Separable Convolutions"""
+
+    def __init__(self, dw_channels, out_channels, stride=1, **kwargs):
+        super(DepthSepConv, self).__init__()
+        self.conv1 = nn.Conv2d(dw_channels, dw_channels,
+                               3, stride, 1, groups=dw_channels, bias=False)
+        self.bn1 = nn.BatchNorm2d(dw_channels)
+        self.relu1 = nn.ReLU(True)
+        self.conv2 = nn.Conv2d(dw_channels, out_channels, 1, bias=False)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+        self.relu2 = nn.ReLU(True)
+
+    def forward(self, x):
+        out = self.relu1(self.bn1(self.conv1(x)))
+        out = self.relu2(self.bn2(self.conv2(out)))
+        return out
+
+
+class DepthConv(nn.Module):
+    """Depthwise Convolution"""
+
+    def __init__(self, dw_channels, out_channels, stride=1, **kwargs):
+        super(DepthConv, self).__init__()
+        self.conv = nn.Conv2d(dw_channels, out_channels,
+                              3, stride, 1, groups=dw_channels, bias=False)
+        self.bn = nn.BatchNorm2d(out_channels)
+        self.relu = nn.ReLU(True)
+
+    def forward(self, x):
+        return self.relu(self.bn(self.conv(x)))
 
 
 class FastSCNN(nn.Module):
-    def __init__(self, num_classes, aux=False, **kwargs):
+    def __init__(self, num_classes, **kwargs):
         super(FastSCNN, self).__init__()
-        self.aux = aux
         self.learning_to_downsample = LearningToDownsample(32, 48, 64)
         self.global_feature_extractor = GlobalFeatureExtractor(
             64, [64, 96, 128], 128, 6, [3, 3, 3])
         self.feature_fusion = FeatureFusionModule(64, 128, 128)
         self.classifier = Classifer(128, num_classes)
-        if self.aux:
-            self.auxlayer = nn.Sequential(
-                nn.Conv2d(64, 32, 3, padding=1, bias=False),
-                nn.BatchNorm2d(32),
-                nn.ReLU(True),
-                nn.Dropout(0.1),
-                nn.Conv2d(32, num_classes, 1)
-            )
 
     def forward(self, x):
         size = x.size()[2:]
@@ -36,61 +73,7 @@ class FastSCNN(nn.Module):
         outputs = []
         x = F.interpolate(x, size, mode='bilinear', align_corners=True)
         outputs.append(x)
-        if self.aux:
-            auxout = self.auxlayer(higher_res_features)
-            auxout = F.interpolate(
-                auxout, size, mode='bilinear', align_corners=True)
-            outputs.append(auxout)
         return tuple(outputs)
-
-
-class _ConvBNReLU(nn.Module):
-    """Conv-BN-ReLU"""
-
-    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=0, **kwargs):
-        super(_ConvBNReLU, self).__init__()
-        self.conv = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size,
-                      stride, padding, bias=False),
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(True)
-        )
-
-    def forward(self, x):
-        return self.conv(x)
-
-
-class _DSConv(nn.Module):
-    """Depthwise Separable Convolutions"""
-
-    def __init__(self, dw_channels, out_channels, stride=1, **kwargs):
-        super(_DSConv, self).__init__()
-        self.conv = nn.Sequential(
-            nn.Conv2d(dw_channels, dw_channels, 3, stride,
-                      1, groups=dw_channels, bias=False),
-            nn.BatchNorm2d(dw_channels),
-            nn.ReLU(True),
-            nn.Conv2d(dw_channels, out_channels, 1, bias=False),
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(True)
-        )
-
-    def forward(self, x):
-        return self.conv(x)
-
-
-class _DWConv(nn.Module):
-    def __init__(self, dw_channels, out_channels, stride=1, **kwargs):
-        super(_DWConv, self).__init__()
-        self.conv = nn.Sequential(
-            nn.Conv2d(dw_channels, out_channels, 3, stride,
-                      1, groups=dw_channels, bias=False),
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(True)
-        )
-
-    def forward(self, x):
-        return self.conv(x)
 
 
 class LinearBottleneck(nn.Module):
@@ -101,9 +84,9 @@ class LinearBottleneck(nn.Module):
         self.use_shortcut = stride == 1 and in_channels == out_channels
         self.block = nn.Sequential(
             # pw
-            _ConvBNReLU(in_channels, in_channels * t, 1),
+            ConvBNReLU(in_channels, in_channels * t, 1),
             # dw
-            _DWConv(in_channels * t, in_channels * t, stride),
+            DepthConv(in_channels * t, in_channels * t, stride),
             # pw-linear
             nn.Conv2d(in_channels * t, out_channels, 1, bias=False),
             nn.BatchNorm2d(out_channels)
@@ -122,11 +105,11 @@ class PyramidPooling(nn.Module):
     def __init__(self, in_channels, out_channels, **kwargs):
         super(PyramidPooling, self).__init__()
         inter_channels = int(in_channels / 4)
-        self.conv1 = _ConvBNReLU(in_channels, inter_channels, 1, **kwargs)
-        self.conv2 = _ConvBNReLU(in_channels, inter_channels, 1, **kwargs)
-        self.conv3 = _ConvBNReLU(in_channels, inter_channels, 1, **kwargs)
-        self.conv4 = _ConvBNReLU(in_channels, inter_channels, 1, **kwargs)
-        self.out = _ConvBNReLU(in_channels * 2, out_channels, 1)
+        self.conv1 = ConvBNReLU(in_channels, inter_channels, 1, **kwargs)
+        self.conv2 = ConvBNReLU(in_channels, inter_channels, 1, **kwargs)
+        self.conv3 = ConvBNReLU(in_channels, inter_channels, 1, **kwargs)
+        self.conv4 = ConvBNReLU(in_channels, inter_channels, 1, **kwargs)
+        self.out = ConvBNReLU(in_channels * 2, out_channels, 1)
 
     def pool(self, x, size):
         avgpool = nn.AdaptiveAvgPool2d(size)
@@ -151,9 +134,9 @@ class LearningToDownsample(nn.Module):
 
     def __init__(self, dw_channels1=32, dw_channels2=48, out_channels=64, **kwargs):
         super(LearningToDownsample, self).__init__()
-        self.conv = _ConvBNReLU(3, dw_channels1, 3, 2)
-        self.dsconv1 = _DSConv(dw_channels1, dw_channels2, 2)
-        self.dsconv2 = _DSConv(dw_channels2, out_channels, 2)
+        self.conv = ConvBNReLU(3, dw_channels1, 3, 2)
+        self.dsconv1 = DepthSepConv(dw_channels1, dw_channels2, 2)
+        self.dsconv2 = DepthSepConv(dw_channels2, out_channels, 2)
 
     def forward(self, x):
         x = self.conv(x)
@@ -179,7 +162,7 @@ class GlobalFeatureExtractor(nn.Module):
     def _make_layer(self, block, inplanes, planes, blocks, t=6, stride=1):
         layers = []
         layers.append(block(inplanes, planes, t, stride))
-        for i in range(1, blocks):
+        for _ in range(1, blocks):
             layers.append(block(planes, planes, t, 1))
         return nn.Sequential(*layers)
 
@@ -197,24 +180,24 @@ class FeatureFusionModule(nn.Module):
     def __init__(self, highter_in_channels, lower_in_channels, out_channels, scale_factor=4, **kwargs):
         super(FeatureFusionModule, self).__init__()
         self.scale_factor = scale_factor
-        self.dwconv = _DWConv(lower_in_channels, out_channels, 1)
-        self.conv_lower_res = nn.Sequential(
-            nn.Conv2d(out_channels, out_channels, 1),
-            nn.BatchNorm2d(out_channels)
-        )
-        self.conv_higher_res = nn.Sequential(
-            nn.Conv2d(highter_in_channels, out_channels, 1),
-            nn.BatchNorm2d(out_channels)
-        )
+        self.dwconv = DepthConv(lower_in_channels, out_channels, 1)
+        self.conv_lower_res = nn.Conv2d(out_channels, out_channels, 1)
+        self.bn_lower_res = nn.BatchNorm2d(out_channels)
+
+        self.conv_higher_res = nn.Conv2d(highter_in_channels, out_channels, 1)
+        self.bn_higher_res = nn.BatchNorm2d(out_channels)
+
         self.relu = nn.ReLU(True)
 
     def forward(self, higher_res_feature, lower_res_feature):
         lower_res_feature = F.interpolate(
             lower_res_feature, scale_factor=4, mode='bilinear', align_corners=True)
         lower_res_feature = self.dwconv(lower_res_feature)
-        lower_res_feature = self.conv_lower_res(lower_res_feature)
+        lower_res_feature = self.bn_lower_res(
+            self.conv_lower_res(lower_res_feature))
 
-        higher_res_feature = self.conv_higher_res(higher_res_feature)
+        higher_res_feature = self.bn_higher_res(
+            self.conv_higher_res(higher_res_feature))
         out = higher_res_feature + lower_res_feature
         return self.relu(out)
 
@@ -224,8 +207,8 @@ class Classifer(nn.Module):
 
     def __init__(self, dw_channels, num_classes, stride=1, **kwargs):
         super(Classifer, self).__init__()
-        self.dsconv1 = _DSConv(dw_channels, dw_channels, stride)
-        self.dsconv2 = _DSConv(dw_channels, dw_channels, stride)
+        self.dsconv1 = DepthSepConv(dw_channels, dw_channels, stride)
+        self.dsconv2 = DepthSepConv(dw_channels, dw_channels, stride)
         self.conv = nn.Sequential(
             nn.Dropout(0.1),
             nn.Conv2d(dw_channels, num_classes, 1)
@@ -256,7 +239,6 @@ def get_fast_scnn(dataset='citys', pretrained=False, root='./weights', map_cpu=F
         'coco': 'coco',
         'citys': 'citys',
     }
-    # from data_loader import datasets
     model = FastSCNN(datasets[dataset].NUM_CLASS, **kwargs)
     if pretrained:
         if (map_cpu):
@@ -266,3 +248,9 @@ def get_fast_scnn(dataset='citys', pretrained=False, root='./weights', map_cpu=F
             model.load_state_dict(torch.load(os.path.join(
                 root, 'fast_scnn_%s.pth' % acronyms[dataset])))
     return model
+
+
+if __name__ == '__main__':
+    img = torch.randn(2, 3, 256, 512)
+    model = get_fast_scnn('citys')
+    outputs = model(img)
