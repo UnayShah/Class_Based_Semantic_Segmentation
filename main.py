@@ -3,7 +3,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
 
-from segment import SegmentData
+from segment_main import SegmentData
 from style_transfer.stylize import Stylize
 cbs_args = {
     "image_path": "",
