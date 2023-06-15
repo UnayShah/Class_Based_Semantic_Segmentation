@@ -11,7 +11,7 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 
 from .vgg import Vgg16
-from .transformer_net import TransformerNet
+from .transformer_net_modified_2 import TransformerNet
 from .utils import *
 
 

@@ -8,7 +8,7 @@ import gc
 from PIL import Image
 
 from numpy import ndarray
-from .transformer_net import TransformerNet
+from .transformer_net_modified_2 import TransformerNet
 
 
 class Stylize():

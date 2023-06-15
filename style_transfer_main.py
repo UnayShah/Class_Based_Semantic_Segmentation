@@ -81,7 +81,7 @@ if __name__ == '__main__':
             style_name = style_path.split('/')[-1]
             trainNet = train_model(dataset_path)
             trainNet.train([200, 200], style_list, style_name,
-                           epochs=1000, log_interval=10, batch_size=25)
+                           epochs=500, log_interval=10, batch_size=25)
         else:
             for name, s in zip(style_names, style_list):
                 print('Using style image: {}'.format(s))
