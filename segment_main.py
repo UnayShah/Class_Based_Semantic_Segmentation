@@ -1,11 +1,28 @@
 import os
+import sys
+from PIL import Image
+import numpy as np
+
 import torch
 import torchvision.transforms as transforms
 from torchvision import transforms
-from PIL import Image
+
 from segmentation.fast_scnn_model import get_fast_scnn
-import numpy as np
-import matplotlib.pyplot as plt
+from segmentation.segment_train import Trainer, parse_args
+
+if __name__ == '__main__':
+    args = sys.argv[1:]
+    train: bool = False
+
+    for arg in args:
+        if arg == 'train_segment':
+            train = True
+        
+    if train:
+        trainer = Trainer(parse_args(
+            'fast_scnn', 'citys', 1024, 512, 'train'))
+        trainer.train()
+
 
 train_ids_dict = {
     0: "road",

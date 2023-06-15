@@ -1,15 +1,15 @@
-from stylize import Stylize
-from train import train_model
+from style_transfer.stylize import Stylize
+from style_transfer.train import train_model
 import sys
 from os.path import isdir, isfile, join, exists
 from os import listdir, mkdir
 from PIL import Image
 from tqdm import tqdm
 
-DEFAULT_STYLE_PATH: str = './style_images'
-DEFAULT_TRAIN_PATH: str = './Images'
-DEFAULT_TO_STYLE_PATH: str = './to_style'
-DEFAULT_MODEL_PATH: str = './model/trained_model.model'
+DEFAULT_STYLE_PATH: str = './style_transfer/style_images'
+DEFAULT_TRAIN_PATH: str = './style_transfer/Images'
+DEFAULT_TO_STYLE_PATH: str = './style_transfer/to_style'
+DEFAULT_MODEL_PATH: str = './style_transfer/models/mosaic_trained_model.model'
 
 if __name__ == '__main__':
     args = sys.argv[1:]
@@ -59,7 +59,8 @@ if __name__ == '__main__':
         assert isdir(style_path) or isfile(
             style_path), 'Given style path does not exist'
         assert isdir(dataset_path), 'Given train path does not exist'
-        assert isdir(style_path) if single_style else True, 'Train multiple is set but model path is not a directory'
+        assert isdir(
+            style_path) if single_style else True, 'Train multiple is set but model path is not a directory'
 
         style_list: list[str] = []
         style_names: list[str] = []
@@ -79,14 +80,16 @@ if __name__ == '__main__':
         if single_style:
             style_name = style_path.split('/')[-1]
             trainNet = train_model(dataset_path)
-            trainNet.train([200, 200], dataset_path, style_list, style_name, epochs=1000, log_interval=10, batch_size=25)
+            trainNet.train([200, 200], style_list, style_name,
+                           epochs=1000, log_interval=10, batch_size=25)
         else:
             for name, s in zip(style_names, style_list):
                 print('Using style image: {}'.format(s))
                 trainNet = train_model(dataset_path)
-                trainNet.train([200, 200], dataset_path, [s], name,
-                            epochs=300, log_interval=10, batch_size=25)
+                trainNet.train([200, 200], [s], name,
+                               epochs=300, log_interval=10, batch_size=25)
     if style:
+        print(to_style_path)
         assert isdir(to_style_path), 'Given images path does not exist'
 
         stylize = Stylize(model_path)

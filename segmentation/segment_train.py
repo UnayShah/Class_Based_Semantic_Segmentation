@@ -8,11 +8,11 @@ import torch.utils.data as data
 import torch.backends.cudnn as cudnn
 
 from torchvision import transforms
-from cityscape_dataloader import CitySegmentation
-from fast_scnn_model import get_fast_scnn
-from utils.loss import MixSoftmaxCrossEntropyOHEMLoss
-from utils.lr_scheduler import LRScheduler
-from utils.metric import SegmentationMetric
+from .cityscape_dataloader import CitySegmentation
+from .fast_scnn_model import get_fast_scnn
+from .utils.loss import MixSoftmaxCrossEntropyOHEMLoss
+from .utils.lr_scheduler import LRScheduler
+from .utils.metric import SegmentationMetric
 
 
 def parse_args(model, dataset, base_size, crop_size, train_split):
@@ -43,14 +43,14 @@ def parse_args(model, dataset, base_size, crop_size, train_split):
     return args
 
 
-datasets = {
-    'citys': CitySegmentation,
-}
+# datasets = {
+#     'citys': CitySegmentation,
+# }
 
 
 def get_segmentation_dataset(name, **kwargs):
     """Segmentation Datasets"""
-    return datasets[name.lower()](**kwargs)
+    return CitySegmentation(**kwargs)
 
 
 class Trainer(object):

@@ -1,6 +1,6 @@
 import time
 import os
-
+from tqdm import tqdm
 from PIL import Image
 import matplotlib.pyplot as plt
 
@@ -10,21 +10,20 @@ from torchvision import transforms, datasets
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 
-from transformer_net import TransformerNet
-from vgg import Vgg16
-import utils
-from tqdm import tqdm
+from .vgg import Vgg16
+from .transformer_net import TransformerNet
+from .utils import *
 
 
 class train_model():
 
     def __init__(self, dataset_path: str) -> None:
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
+        self.dataset_path = dataset_path
         self.transformer = TransformerNet().to(self.device)
         self.transformer.train()
 
-    def train(self, image_size: tuple[int], dataset_path: str, style_image_path: list[str], style_name: str,
+    def train(self, image_size: tuple[int], style_image_path: list[str], style_name: str,
               save_model_path: str = './model', content_weight: float = 1e5,
               style_weight: float = 1e10, batch_size: int = 16, lr: float = 0.001,
               epochs: int = 500, log_interval: int = 10):
@@ -35,11 +34,12 @@ class train_model():
                    for s in image_size), 'Image size must be int or float'
 
         # check dataset path
-        assert isinstance(dataset_path, str) and os.path.isdir(dataset_path)
-        print('directories', os.listdir(dataset_path))
+        assert isinstance(self.dataset_path, str) and os.path.isdir(
+            self.dataset_path)
+        print('directories', os.listdir(self.dataset_path))
         no_directories: bool = True
-        for f in os.listdir(dataset_path):
-            if os.path.isdir(os.path.join(dataset_path, f)):
+        for f in os.listdir(self.dataset_path):
+            if os.path.isdir(os.path.join(self.dataset_path, f)):
                 print(f)
                 no_directories = False
                 break
@@ -75,7 +75,7 @@ class train_model():
         ])
 
         # Load data
-        train_dataset = datasets.ImageFolder(dataset_path, transform)
+        train_dataset = datasets.ImageFolder(self.dataset_path, transform)
         train_loader = DataLoader(
             train_dataset, batch_size=batch_size, shuffle=True)
 
@@ -87,9 +87,9 @@ class train_model():
 
         # Load VGG
         vgg = Vgg16(requires_grad=False).to(self.device)
-        styles_features = [vgg(utils.normalize_batch(style))
+        styles_features = [vgg(normalize_batch(style))
                            for style in styles]
-        gram_styles = [[utils.gram_matrix(
+        gram_styles = [[gram_matrix(
             y) for y in style_features] for style_features in styles_features]
 
         start_time = time.time()
@@ -105,11 +105,11 @@ class train_model():
                 optimizer.zero_grad()
 
                 x = x.to(self.device)
-                x = utils.normalize_batch(x)
+                x = normalize_batch(x)
                 features_x = vgg(x)
 
                 y = self.transformer(x)
-                y = utils.normalize_batch(y)
+                y = normalize_batch(y)
                 features_y = vgg(y)
 
                 content_loss = content_weight * \
@@ -118,7 +118,7 @@ class train_model():
                 style_loss = 0.
                 style_index = torch.randint(0, len(gram_styles), (1,))[0]
                 for ft_y, gm_s in zip(features_y, gram_styles[style_index]):
-                    gm_y = utils.gram_matrix(ft_y)
+                    gm_y = gram_matrix(ft_y)
                     style_loss += mse_loss(gm_y, gm_s[:len(x)])
                 style_loss *= style_weight
 

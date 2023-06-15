@@ -1,7 +1,7 @@
 import cv2
 from os.path import isfile, exists
 from os import mkdir
-from torch import device, load, cuda, no_grad, min, max
+from torch import device, load, cuda, no_grad
 from torchvision import transforms
 from numpy import uint8
 import gc
@@ -37,11 +37,11 @@ class Stylize():
         content_image = content_image.unsqueeze(0).to(self.device)
 
         output = self.style_model(content_image)
-        
+
         # output -= min(output)
         # output = (output/max(output))*255
-        output[0][output[0]<0] = 0
-        output[0][output[0]>255] = 255
+        output[0][output[0] < 0] = 0
+        output[0][output[0] > 255] = 255
 
         save_image = Image.fromarray(output[0].permute(
             (1, 2, 0)).int().cpu().numpy().astype(uint8))
