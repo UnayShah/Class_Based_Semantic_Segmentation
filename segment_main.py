@@ -17,7 +17,7 @@ if __name__ == '__main__':
     for arg in args:
         if arg == 'train_segment':
             train = True
-        
+
     if train:
         trainer = Trainer(parse_args(
             'fast_scnn', 'citys', 1024, 512, 'train'))
@@ -71,6 +71,7 @@ class SegmentData():
 
     def segment_image(self, input_image):
         image = Image.open(input_image).convert('RGB')
+        image = image.resize((2048, 1024))
         image = self.transform(image).unsqueeze(0).to(self.device)
 
         print('Finished loading model!')
@@ -79,10 +80,9 @@ class SegmentData():
             outputs = self.model(image)
 
         pred = torch.argmax(outputs[0], 1).squeeze(0).cpu().data.numpy()
-        original_image = np.asarray(Image.open(input_image).convert('RGB'))
         unique_labels = np.unique(pred)
         masks = np.zeros(
-            (original_image.shape[0], original_image.shape[1], unique_labels.shape[0]))
+            (1024, 2048, unique_labels.shape[0]))
         labels: list[str] = []
         for i in range(unique_labels.shape[0]):
             masks[:, :, i] = pred == unique_labels[i]

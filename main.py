@@ -70,15 +70,19 @@ if __name__ == "__main__":
         image_list.append(images_path)
 
     for image_path in image_list:
-        image = np.asarray(Image.open(image_path).convert('RGB'))
+        image = Image.open(image_path).convert('RGB')
+        original_size = image.size
+        image = image.resize((2048, 1024))
+        image = np.asarray(image)
 
         for mask, label in zip(masks, labels):
             if label in style_models and len(style_models[label]) > 0:
                 stylized_image = np.asarray(
                     stylize[label].stylize_image(image))
                 image[masks[:, :, 0] == 1] = stylized_image[masks[:, :, 0] == 1]
+        image = Image.fromarray(image)
+        image = image.resize(original_size)
         # Save image to output folder
         if not os.path.exists(OUTPUT_FOLDER):
             os.makedirs(OUTPUT_FOLDER)
-        Image.fromarray(image).save(os.path.join(
-            OUTPUT_FOLDER, os.path.basename(image_path)))
+        image.save(os.path.join(OUTPUT_FOLDER, os.path.basename(image_path)))
