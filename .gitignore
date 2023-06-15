@@ -3,7 +3,6 @@ env
 png
 models
 test_results
-weights
 *__pycache__*
 test_result
 env
@@ -11,7 +10,6 @@ env
 __pycache__
 
 sample_video
-model
 output
 to_style
 styled
