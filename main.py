@@ -1,8 +1,8 @@
 import sys
 import os
-from PIL import Image
-import matplotlib.pyplot as plt
 import numpy as np
+from PIL import Image
+from tqdm import tqdm
 
 from segment_main import SegmentData
 from style_transfer.stylize import Stylize
@@ -39,27 +39,33 @@ if __name__ == "__main__":
     i = 0
     while i < len(argv):
         # Path to images folder
+        print(argv[i])
         if argv[i] == "-images_path" and i+1 < len(argv):
             images_path = argv[i+1]
+            i += 1
         # Path to style models mapping with classes
         elif argv[i] in style_models:
+            del style_models[argv[i]]
             argv[i] = argv[i].replace('-', '')
             style_models[argv[i]] = argv[i+1]
             i += 1
         i += 1
 
+    # Load models
     segment_image = SegmentData(
         model='fast_scnn', dataset='citys', weights_folder='./segmentation/weights',)
-    masks, labels = segment_image.segment_image(images_path)
+
+    stylize = {}
+    print(style_models.keys())
+    for key in style_models.keys():
+        if key.startswith('-'):
+            continue
+        stylize[key] = Stylize(style_models[key])
 
     assert os.path.isdir(images_path) or (os.path.isfile(
         images_path) and images_path.split('.')[-1].lower() in image_ext), "Image path is not valid"
 
     # Load style models with labels
-    stylize = {}
-    for label in labels:
-        if label in style_models and len(style_models[label]) > 0:
-            stylize[label] = Stylize(style_models[label])
 
     image_list: list[str] = []
     if os.path.isdir(images_path):
@@ -69,17 +75,21 @@ if __name__ == "__main__":
     elif os.path.isfile(images_path):
         image_list.append(images_path)
 
-    for image_path in image_list:
+    for image_path in tqdm(image_list):
+
+        masks, labels = segment_image.segment_image(image_path)
+
         image = Image.open(image_path).convert('RGB')
         original_size = image.size
         image = image.resize((2048, 1024))
         image = np.asarray(image)
 
-        for mask, label in zip(masks, labels):
+        for mask_i, label in enumerate(labels):
             if label in style_models and len(style_models[label]) > 0:
                 stylized_image = np.asarray(
                     stylize[label].stylize_image(image))
-                image[masks[:, :, 0] == 1] = stylized_image[masks[:, :, 0] == 1]
+                image[masks[:, :, mask_i] ==
+                      1] = stylized_image[masks[:, :, mask_i] == 1]
         image = Image.fromarray(image)
         image = image.resize(original_size)
         # Save image to output folder

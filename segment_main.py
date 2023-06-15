@@ -74,8 +74,6 @@ class SegmentData():
         image = image.resize((2048, 1024))
         image = self.transform(image).unsqueeze(0).to(self.device)
 
-        print('Finished loading model!')
-
         with torch.no_grad():
             outputs = self.model(image)
 
@@ -87,8 +85,6 @@ class SegmentData():
         for i in range(unique_labels.shape[0]):
             masks[:, :, i] = pred == unique_labels[i]
             labels.append(train_ids_dict[unique_labels[i]])
-            # plt.imshow(masks[:, :, i])
-            # plt.show()
         return masks, labels
 
 # Call the demo function with the desired arguments
