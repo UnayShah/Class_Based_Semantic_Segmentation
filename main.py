@@ -39,7 +39,6 @@ if __name__ == "__main__":
     i = 0
     while i < len(argv):
         # Path to images folder
-        print(argv[i])
         if argv[i] == "-images_path" and i+1 < len(argv):
             images_path = argv[i+1]
             i += 1
@@ -56,7 +55,6 @@ if __name__ == "__main__":
         model='fast_scnn', dataset='citys', weights_folder='./segmentation/weights',)
 
     stylize = {}
-    print(style_models.keys())
     for key in style_models.keys():
         if key.startswith('-'):
             continue
