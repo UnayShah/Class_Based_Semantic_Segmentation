@@ -54,7 +54,7 @@ where classname could be any class that the model can predict. We are using city
 
 These classes can be used with a `-`(hyphen) prefix, followed by the name of the model to be used. For example:
 
-    python main.py -images_path './datasets/citys/leftImg8bit/test/mainz' -road ./style_transfer/model/udnie_trained_model.model -sky ./style_transfer/model/starry_night_trained_model.model
+    python main.py -images_path './datasets/citys/leftImg8bit/test/mainz' -road ./style_transfer/models/changed_model_2_udnie_trained_model.model -sky ./style_transfer/models/changed_model_2_starry_night_trained_model.model
 
 ## <a name="train_style"></a>Training style transfer
 Style transfer models can be trained using a generic dataset of images and one or more style images. A generic set of images helps generalize the features on which the model is trained. To train an image on a single style:
@@ -67,7 +67,7 @@ The path given for training images needs to contain a **folder** with all requir
 
 Multiple images can be used to train a single image. This is an experiment done to observe whether the style of an artist can be replicated from multiple artworks belonging to them. Use the command `-single_style` when training such a model.
 
-    python style_transfer_main.py train -train './JPEGImages' -styles './style_transfer/wassily_kandinsky_styles' -single_style
+    python style_transfer_main.py train -train './JPEGImages' -styles './style_transfer/changed_model_2_wassily_kandinsky_styles' -single_style
 
 
 ## <a name="run_style"></a>Using a trained style transfer model
@@ -77,7 +77,7 @@ A trained model can be used with a folder containing images to perform style tra
 
 A folder named `styled`, containing all the styled images, is created.
 
-    python style_transfer_main.py style -model './style_transfer/model/The_Persistence_of_Memory_trained_model.model' -tostyle './style_transfer/Images/Images'
+    python style_transfer_main.py style -model './style_transfer/models/changed_model_2_The_Persistence_of_Memory_trained_model.model' -tostyle './style_transfer/Images/Images'
 
 
 **Note:** Both `train` and `style` flags can be used together and the `train` command takes effect first before the `style` command

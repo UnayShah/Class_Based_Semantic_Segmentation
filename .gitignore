@@ -1,7 +1,5 @@
-datasets
 env
 png
-test_results
 *__pycache__*
 env
 .vscode
