@@ -3,7 +3,6 @@ env
 png
 test_results
 *__pycache__*
-test_result
 env
 .vscode
 __pycache__
