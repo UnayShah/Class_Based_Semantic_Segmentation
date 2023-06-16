@@ -93,15 +93,15 @@ if __name__ == '__main__':
         assert isdir(to_style_path), 'Given images path does not exist'
 
         stylize = Stylize(model_path)
-        model_name: str = model_path.split('/')[-1].split('.')[0]
+        model_name: str = model_path.replace('\\','/').split('/')[-1].split('.')[0]
         for f in tqdm(listdir(to_style_path)):
             image_path = join(to_style_path, f)
             content_image = Image.open(image_path).convert('RGB')
             processed = stylize.stylize_image(content_image)
-            if not exists('styled'):
-                mkdir('styled')
-            if not exists(join('styled', model_name)):
-                mkdir(join('styled', model_name))
-            processed.save(join('styled', model_name, f))
+            if not exists('./style_transfer/styled'):
+                mkdir('./style_transfer/styled')
+            if not exists(join('./style_transfer/styled', model_name)):
+                mkdir(join('./style_transfer/styled', model_name))
+            processed.save(join('./style_transfer/styled', model_name, f))
 
     # stylize.stylize_video('./sample_video/sample_video_small.mp4')

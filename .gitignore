@@ -1,7 +1,6 @@
 datasets
 env
 png
-models
 test_results
 *__pycache__*
 test_result

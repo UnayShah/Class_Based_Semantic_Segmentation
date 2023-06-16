@@ -24,7 +24,7 @@ class train_model():
         self.transformer.train()
 
     def train(self, image_size: tuple[int], style_image_path: list[str], style_name: str,
-              save_model_path: str = './model', content_weight: float = 1e5,
+              save_model_path: str = './models', content_weight: float = 1e5,
               style_weight: float = 1e10, batch_size: int = 16, lr: float = 0.001,
               epochs: int = 500, log_interval: int = 10):
         assert image_size, 'Image size cannot be None'
