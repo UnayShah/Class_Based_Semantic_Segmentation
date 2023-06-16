@@ -77,6 +77,9 @@ A trained model can be used with a folder containing images to perform style tra
 
 A folder named `styled`, containing all the styled images, is created.
 
+    python style_transfer_main.py style -model './style_transfer/model/The_Persistence_of_Memory_trained_model.model' -tostyle './style_transfer/Images/Images'
+
+
 **Note:** Both `train` and `style` flags can be used together and the `train` command takes effect first before the `style` command
 
 ## <a name="train_segmentation"></a>Training a segmentation model
@@ -91,17 +94,42 @@ A segmentation model can only be trained using a Cityscape format Dataset. This 
     │   │   ├── leftImg8bit
     │   │   │   ├── test
     │   │   │   ├── train
-    └────────────── val
+    └───└───└───└── val
 
 And the following command is to be used:
 
     python segment_main.py -train_segment
 
 # Results
+## Fast Style Transfer
 We were able to train a style transfer model that runs at approximately 25fps giving the following results:
 
 |Style|Original Image|Styled Image|
 |---|---|---|
 |<img src="./style_transfer/style_images/The_Persistence_of_Memory.jpg" height="200">|<img src="./style_transfer/Images/Images/2007_000033.jpg" height="200">|<img src="./style_transfer/styled/changed_model_2_The_Persistence_of_Memory_trained_model/2007_000033.jpg" height="200">| 
-|<img src="./style_transfer/style_images/mosaic.jpg" height="200" align="center">|<img src="./style_transfer/Images/Images/2007_000129.jpg" height="200" align="center">|<img src="./style_transfer/styled/changed_model_2_mosaic_trained_model/2007_000129.jpg" align="center" height="200">|
+|<img src="./style_transfer/style_images/mosaic.jpg" height="200">|<img src="./style_transfer/Images/Images/2007_000129.jpg" height="200">|<img src="./style_transfer/styled/changed_model_2_mosaic_trained_model/2007_000129.jpg" height="200">|
 
+## Fast SCNN
+|Original Image|Segmented Image|
+|---|---|
+|<img src="./test_result/mainz_000000_001410_leftImg8bit.png" height="200">|<img src="./test_result/mainz_000000_001410_leftImg8bit_mask.png" height="200">| 
+|<img src="./test_result/mainz_000003_001899_leftImg8bit.png" height="200">|<img src="./test_result/mainz_000003_001899_leftImg8bit_mask.png" height="200">|
+
+## Combined Pipeline
+|Original Image|Stylized Image|
+|---|---|
+|<img src="./test_result/mainz_000000_001410_leftImg8bit.png" height="200">|<img src="./test_result/mainz_000000_001410_leftImg8bit_output.png" height="200">| 
+|<img src="./test_result/mainz_000003_001899_leftImg8bit.png" height="200">|<img src="./test_result/mainz_000003_001899_leftImg8bit_output.png" height="200">|
+
+# Ablation Study
+We tried modifying the orignal network in the following ways:
+* Removing encoder and decoder layers, and using only 64 layers for residual blocks
+* Adding encoder and decoder layers, and using 256 layers for residual blocks
+* Using batch normalization instead of instance normalization
+
+The model with just 64 layers performed just as well as the original model, with slightly better results in some images. Here are the results:
+
+|Original Image|Their Model|Our Model|Using BN|256 Layer Residual|
+|---|---|---|---|---|
+|<img src='./style_transfer/styled/comparision_results/1/2007_000042.jpg' height='200'/>|<img src='./style_transfer/styled/comparision_results/1/original_2007_000042.jpg' height='200'/>|<img src='./style_transfer/styled/comparision_results/1/ours_2007_000042.jpg' height='200'/>|<img src='./style_transfer/styled/comparision_results/1/bn_2007_000042.jpg' height='200'/>|<img src='./style_transfer/styled/comparision_results/1/larger_2007_000042.jpg' height='200'/>|
+|<img src='./style_transfer/styled/comparision_results/2/2008_000443.jpg' height='200'/>|<img src='./style_transfer/styled/comparision_results/2/original_2008_000443.jpg' height='200'/>|<img src='./style_transfer/styled/comparision_results/2/ours_2008_000443.jpg' height='200'/>|<img src='./style_transfer/styled/comparision_results/2/bn_2008_000443.jpg' height='200'/>|<img src='./style_transfer/styled/comparision_results/2/larger_2008_000443.jpg' height='200'/>|
